@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positional Encoding Frequencies</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            margin: 30px 0;
+            height: 400px;
+            position: relative;
+        }
+        .explanation {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .values-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .values-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .freq-label {
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1976D2;
+            text-align: center;
+        }
+        h2 {
+            color: #424242;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Understanding Positional Encoding Frequencies</h1>
+        
+        <div class="explanation">
+            <h3>The Key Insight:</h3>
+            <p><strong>High frequency</strong> = changes quickly across positions (good for distinguishing nearby positions)</p>
+            <p><strong>Low frequency</strong> = changes slowly across positions (good for capturing long-range relationships)</p>
+        </div>
+
+        <h2>Visual Comparison: Different Frequencies</h2>
+        <div class="chart-container">
+            <canvas id="frequencyChart"></canvas>
+        </div>
+
+        <div class="explanation">
+            <h3>What You're Seeing:</h3>
+            <ul>
+                <li><span style="color: #FF6384;">🔴 sin(pos)</span> - High frequency: Completes full cycles quickly</li>
+                <li><span style="color: #36A2EB;">🔵 sin(pos/10)</span> - Medium frequency: Slower cycles</li>
+                <li><span style="color: #FFCE56;">🟡 sin(pos/100)</span> - Low frequency: Very slow cycles</li>
+                <li><span style="color: #4BC0C0;">🟢 sin(pos/1000)</span> - Ultra low frequency: Barely changes</li>
+            </ul>
+        </div>
+
+        <h2>Actual Values at Different Positions</h2>
+        <div class="values-table">
+            <div class="values-card">
+                <div class="freq-label">High Freq: sin(pos)</div>
+                <div id="highFreqValues"></div>
+            </div>
+            <div class="values-card">
+                <div class="freq-label">Medium Freq: sin(pos/10)</div>
+                <div id="medFreqValues"></div>
+            </div>
+            <div class="values-card">
+                <div class="freq-label">Low Freq: sin(pos/100)</div>
+                <div id="lowFreqValues"></div>
+            </div>
+            <div class="values-card">
+                <div class="freq-label">Ultra Low: sin(pos/1000)</div>
+                <div id="ultraLowValues"></div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <h3>🧠 Why This Matters for Transformers:</h3>
+            <p><strong>High frequency dimensions:</strong> Help distinguish "position 5 vs position 6" - fine-grained differences</p>
+            <p><strong>Low frequency dimensions:</strong> Help understand "beginning vs middle vs end" of sequence - coarse structure</p>
+            <p><strong>Combined:</strong> Each position gets a unique "fingerprint" that captures both local and global position information!</p>
+        </div>
+
+        <h2>Pattern Recognition Challenge</h2>
+        <div class="values-table">
+            <div class="values-card">
+                <div class="freq-label">Position 0 Pattern:</div>
+                <div id="pos0Pattern"></div>
+            </div>
+            <div class="values-card">
+                <div class="freq-label">Position 10 Pattern:</div>
+                <div id="pos10Pattern"></div>
+            </div>
+            <div class="values-card">
+                <div class="freq-label">Position 100 Pattern:</div>
+                <div id="pos100Pattern"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate position data
+        const positions = Array.from({length: 200}, (_, i) => i);
+
+        // Calculate different frequencies
+        const highFreq = positions.map(pos => Math.sin(pos));
+        const medFreq = positions.map(pos => Math.sin(pos / 10));
+        const lowFreq = positions.map(pos => Math.sin(pos / 100));
+        const ultraLowFreq = positions.map(pos => Math.sin(pos / 1000));
+
+        // Create the chart
+        const ctx = document.getElementById('frequencyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: positions.slice(0, 100), // Show first 100 positions
+                datasets: [
+                    {
+                        label: 'sin(pos) - High Frequency',
+                        data: highFreq.slice(0, 100),
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 1
+                    },
+                    {
+                        label: 'sin(pos/10) - Medium Frequency',
+                        data: medFreq.slice(0, 100),
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 1
+                    },
+                    {
+                        label: 'sin(pos/100) - Low Frequency',
+                        data: lowFreq.slice(0, 100),
+                        borderColor: '#FFCE56',
+                        backgroundColor: 'rgba(255, 206, 86, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 1
+                    },
+                    {
+                        label: 'sin(pos/1000) - Ultra Low',
+                        data: ultraLowFreq.slice(0, 100),
+                        borderColor: '#4BC0C0',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'How Different Frequencies Change Across Positions (0-99)'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Position in Sequence'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Sine Value'
+                        },
+                        min: -1.1,
+                        max: 1.1
+                    }
+                }
+            }
+        });
+
+        // Fill value tables
+        function fillValueTable(elementId, values, positions) {
+            const element = document.getElementById(elementId);
+            let html = '';
+            positions.forEach(pos => {
+                html += `<div>Pos ${pos}: ${values[pos].toFixed(3)}</div>`;
+            });
+            element.innerHTML = html;
+        }
+
+        // Sample positions to show
+        const samplePositions = [0, 1, 5, 10, 20, 50];
+        
+        fillValueTable('highFreqValues', highFreq, samplePositions);
+        fillValueTable('medFreqValues', medFreq, samplePositions);
+        fillValueTable('lowFreqValues', lowFreq, samplePositions);
+        fillValueTable('ultraLowValues', ultraLowFreq, samplePositions);
+
+        // Create position patterns (combining multiple frequencies like real positional encoding)
+        function createPattern(pos) {
+            return [
+                Math.sin(pos),
+                Math.cos(pos),
+                Math.sin(pos / 10),
+                Math.cos(pos / 10),
+                Math.sin(pos / 100),
+                Math.cos(pos / 100)
+            ].map(x => x.toFixed(3)).join(', ');
+        }
+
+        document.getElementById('pos0Pattern').innerHTML = `[${createPattern(0)}]`;
+        document.getElementById('pos10Pattern').innerHTML = `[${createPattern(10)}]`;
+        document.getElementById('pos100Pattern').innerHTML = `[${createPattern(100)}]`;
+    </script>
+</body>
+</html>
